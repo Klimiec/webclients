@@ -1,0 +1,17 @@
+services:
+  order-management-service:
+    baseUrl: 'http://localhost:8082'
+    clientName: 'order-management-service'
+    connectionTimeout: 10000
+    readTimeout: 500
+    cache:
+      name: 'order-management-service'
+      enabled: false
+      expireAfter: PT1S
+      size: 1
+  hermes:
+    baseUrl: 'http://localhost:8082'
+    clientName: 'hermes'
+    connectionTimeout: 1000
+    readTimeout: 500
+

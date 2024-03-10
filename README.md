@@ -1,123 +1,163 @@
+# REST service client — design, testing, monitoring
+The purpose of this article is to present how to design, test, and monitor a REST service client.
+The article includes a repository with clients written using various technologies such as [WebClient](https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-webclient),
+[RestClient](https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-restclient),
+[Ktor Client](https://ktor.io/docs/getting-started-ktor-client.html),
+[Retrofit](https://square.github.io/retrofit/).
+It demonstrates how to send and retrieve data from an external service, add a cache layer, and adapter (anti-corruption layer).
 
+## Motivation
+Why do we need objects in the project that encapsulate the HTTP clients we use?
+To begin, we want to separate the domain from technical details.
+The way we retrieve/send data and handle errors, which can be quite complex in the case of HTTP clients, should not clutter business logic.
+Next, testability. Even if we do not use [hexagonal architecture](https://blog.allegro.tech/2020/05/hexagonal-architecture-by-example.html) in our applications,
+it's beneficial to separate the infrastructure layer from the service layer, as it improves testability.
+Verifying an HTTP service client is not simple and requires consideration of many cases — mainly at the integration level.
+Having a separate “building block“ that encapsulates communication with the outside world makes testing much easier.
+Finally, reusability. A service client that has been written once can be successfully used in other projects.
 
-## HTTP Client
-Niniejszy artykuł ma na celu przedstawienie jak zaprojektować, przetestować i monitorować klienta restowego. 
-Do artykułu dołączone jest repozytorium z klientami napisanymi z wykorzystanie między innymi: WebClient, RestClient, Retrofit, Ktor Client
-[WebClient](https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-webclient)
-[RestClient](https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-restclient)
-[Retrofit](https://square.github.io/retrofit/)
-[Ktor Client](https://ktor.io/docs/getting-started-ktor-client.html)
-w których pokazane zostało jak wysłać i pobrać coś z zewnętrznej usługi, dodać warstwę cache oraz adaptera (anti-corruption layer).
-
-
-### Wstęp
-
-Dlaczego w ogóle potrzebujemy w projekcie obiektów, które enkpasulują wykorzystywane przez nas klienty HTTP? 
-Po pierwsze chcemy odseparować naszą domenę do szczegółów technicznych, w jaki sposób pobieramy/wysyłamy dane oraz obsługi błędów, która w przypadku klientów http potrafi być naprawdę rozbudowana. 
-Po drugie testowalność. Nawet jeżeli na co dzień nie wykorzystujemy [architektury hexagonalej](https://blog.allegro.tech/2020/05/hexagonal-architecture-by-example.html)  w naszej aplikacji warto starać się odeseparowywać wastwę infrastruktury od warstwy serwisów ponieważ poprawia to jej testowalność. 
-Weryfikacja klienta http nie jest prosta i wymaga rozpatrzenia wielu przypadków. Posiadanie osobnej „foremki”, która enkapsuluje całość komunikacji zdecydowanie ułatwia testowalność. 
-Próba przetestowania wszystkich przypadków od góry (end-to-end) może okazać się trudna lub wręcz niemożliwa. 
-Po trzecie re-używalność. Raz napisanego klienta można z powodzeniem użyć w innych projektach.
-
-
-### Client Design
-
-Do analizy struktury klienta posłuży nam przykładowa implementacja wykorzystująca [retrofit](https://square.github.io/retrofit/) służąca do pobierania danych z usługi Order-Core-Service.
+## Client Design
+As a case study, I will use an example implementation that utilizes [WebClient](https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-webclient) for retrieving data from the Order Management Service.
+Full working example can be found [here](https://github.com/Klimiec/webclients/tree/main/httpclient-webclientinterface).
 
 ```kotlin
-class OrderCoreServiceClient(
-    private val orderCoreServiceApi: OrderCoreServiceApi,
+class OrderManagementServiceClient(
+    private val orderManagementServiceApi: OrderManagementServiceApi,
     private val clientName: String,
 ) {
     suspend fun getOrdersFor(clientId: ClientId): List<Order> {
         logger.info { "[$clientName] Get orders for a clientId= ${clientId.clientId}" }
-        return handleHttpResponse(
-            response = orderCoreServiceApi.getOrdersFor(clientId.clientId.toString()),
+        return handleHttpResponseAsList(
+            request = { orderManagementServiceApi.getOrdersFor(clientId.clientId.toString()) },
             failureMessage = "[$clientName] Failed to get orders for clientId=${clientId.clientId}"
         ).also {
-            logger.info("[$clientName] Returned orders for a clientId= ${clientId.clientId} $it")
+            logger.info { "[$clientName] Returned orders for a clientId= ${clientId.clientId} $it" }
         }
     }
 }
 ```
 
-#### Nazwa klasy
+### Client name
+The class name for integration with the Order Management Service will be ```OrderManagementServiceClient``` — following the general
+pattern of *ExternalService**Client***.
 
-Jeżeli mam napisać integrację z usługą Order-Core-Service to taką „foremkę” nazwę ```OrderCoreServiceClient``` - ogólny pattern *EnternalServiceClient* (nazwa wołanej usługi + Client)
+If the technology we use employs an interface to describe the called REST API (RestClient, WebClient, Retrofit),
+we will name such an interface ```OrderManagementServiceApi``` — following the general pattern of *ExternalService**Api***.
 
-Jeżeli użyta przez nas technologia wykorzystuje interface do opisu wołanego REST API (RestClient, WebClient, Retrofit) to taki interfejs nazwiemy ```OrderCoreServiceApi``` - ogólny pattern *ExternalServiceApi* nazwa wołanej usługi + Api.
+These names may seem intuitive and obvious, but without an established naming convention, we might end up with a project where
+different integrations have the following suffixes: HttpClient, Facade, WebClient, Adapter, Service.
+It's essential to have a consistent convention and adhere to it throughout the entire project.
 
-Nazwy te mogą wydawać się intuicyjne i oczywiste, ale jeżeli nie ma ustalonej konwencji nazwniczej szybko możemy skończyć z projektem w którym poszczególne integrację będą maiły następujące suffixy: OrderCoreService**HttpClient**, OrderCoreService**Facade**, OrderCoreService**WebClient**, OrderCoreService**Adapter**, OrderCore**Service**.
-Ważne jest, aby mieć stałą konwencję i przestrzegać ją w całym projekcie.
-
-#### Logowanie
-
+### Logging
 ```kotlin
-class OrderCoreServiceClient(
-    private val orderCoreServiceApi: OrderCoreServiceApi,
+class OrderManagementServiceClient(
+    private val orderManagementServiceApi: OrderManagementServiceApi,
     private val clientName: String,
 ) {
     suspend fun getOrdersFor(clientId: ClientId): List<Order> {
-        (1)     logger.info { "[$clientName] Get orders for a clientId= ${clientId.clientId}" }
-                return handleHttpResponse(
-                  response = orderCoreServiceApi.getOrdersFor(clientId.clientId.toString()),
-        (2.1)     failureMessage = "[$clientName] Failed to get orders for clientId=${clientId.clientId}"
-                ).also {
-        (2.2)     logger.info("[$clientName] Returned orders for a clientId= ${clientId.clientId} $it")
-                }
+        (1) logger.info { "[$clientName] Get orders for a clientId= ${clientId.clientId}" }
+        return handleHttpResponseAsList(
+            request = { orderManagementServiceApi.getOrdersFor(clientId.clientId.toString()) },
+            (2.1) failureMessage = "[$clientName] Failed to get orders for clientId=${clientId.clientId}"
+        ).also {
+            (2.2) logger.info { "[$clientName] Returned orders for a clientId= ${clientId.clientId} $it" }
+        }
     }
 }
 ```
-Pobierając dane z zewnętrznej usługi logujemy początek interakcji czyli naszą **intencję** pobrania zasobu(1) oraz jej **efekt** (2). 
-Przy czym efektem może być sukces(2.2) czyli zwrócenie odpowiedzi z kodem typu 2xx albo porażka(2.1).
 
-Porażka może być sygnalizowana kodami błędu (3xx, 4xx, 5xx), wynikać z niemożności zdeserializowania otrzymanej odpowiedzi do obiektu, przekroczeniem czasu odpowiedzi etc. 
-Ogólnie rzecz biorąc [bardzo dużo rzeczy może pójść nie tak](https://blog.allegro.tech/2015/07/testing-server-faults-with-Wiremock.html). W zależności od przyczyny porażki możemy chcieć zalogować rezultat interakcji na różnych poziomach (warn/error).
-Są błędy krytyczne, które warto wyróżnić (error) oraz takie, które od czasu do czasu będą się pojawiać (warn) i nie wymagają pilnej interwencji.
+When retrieving data from an external service, we log the beginning of the interaction,
+indicating our intention to fetch a resource (1), as well as its outcome (2). The outcome can be either be a success (2.2), meaning receiving
+a response with a 2xx status code, or a failure (2.1).
 
-Logi powinny zawierać informację o tym, jaki zasób chcemy pobrać, dla jakich parametrów oraz jakie dane otrzymaliśmy w wyniku zapytania. Szczegóły techniczne można ograniczyć do informacji o wołanym URL, użytej metodzie http oraz kodzie odpowiedzi. 
-Wszystkie logi poprzedzamy nazwą serwisu, z którym się komunikujemy.
+Failure can be signaled by status codes (3xx, 4xx, 5xx), result from the inability to deserialize the received response into an object,
+exceeding the response time, etc. Generally, [many things can go wrong](https://blog.allegro.tech/2015/07/testing-server-faults-with-Wiremock.html).
+Depending on the cause of failure, we may want to log the interaction result at different levels (warn/error).
+There are critical errors that are worth distinguishing (error), and those that will occasionally occur (warn) and don't require urgent intervention.
 
-
-<blockquote>
-OrderCoreServiceClient   : [order-core-service] Get orders for a clientId= ed50b5c0-03a1-4458-be63-d3f9df1b4a26</br>
-okhttp3.OkHttpClient                     : --> GET http://localhost:8082/ed50b5c0-03a1-4458-be63-d3f9df1b4a26/order</br>
-okhttp3.OkHttpClient                     : <-- 200 OK http://localhost:8082/ed50b5c0-03a1-4458-be63-d3f9df1b4a26/order (81ms, unknown-length body)</br>
-OrderCoreServiceClient   : [order-core-service] Returned orders for a clientId= ed50b5c0-03a1-4458-be63-d3f9df1b4a26 [Order(orderId=7952a9ab-503c-4483-beca-32d081cc2446, categoryId=327456, countryCode=PL, clientId=1a575762-0903-4b7a-9da3-d132f487c5ae, price=Price(amount=1500, currency=PLN))]
-</blockquote>
-
-Przykład poprawnie zalogowanej interakcji.
-
-Z logami jest jak z backupem. Dopiero kiedy ich potrzebujesz, bo albo biznes prosi o analizę jakiegoś przypadku albo rozwiązujemy incydent wtedy okazuje się czy je mamy i ile są warte.
-
-#### Obsługa błędów
-
-Znaczna część kodu klienta to obsługa błędów. Składa się ona z dwóch rzeczy: logowania oraz rzucania customowy wyjątków przykrywające wyjątki techniczne rzucane przez użytego klienta.
-Już sama nazwa takiego customowego wyjątku mówi nam dokładnie co poszło nie tak. Dodatkowo można o nie zbudować wizualizacje na Kibanie pokazujące ile wyjątków danego typu wystąpiło w naszej usłudze.
-
-Pisząc kod klienta chcemy maksymalnie uwypuklić to w jaki sposób wysyłamy/pobieramy dane i ukryć szum, który wynika z obsługi błędów. Obsługa błędów jest dość rozbudowana, ale na tyle generyczna, że powstały kod można napisać raz i re-użyć przy tworzeniu kolejnych klientów.
-
-Ważne, aby przemyśleć wszystkie przypadki, które chcemy zaadresować i je przetestować.
-Dokładny opis rozpatrywanych błędów znajduje się w sekcji testing. Zasadniczo im więcej przypadków rozpatrzymy i obsłużymy tym prostsza będzie analiza potencjalnych błędów.
+Logs should contain information about which resource we want to fetch, for what parameters, and what data we received as a result of the request.
+Technical details can be limited to information about the called URL, the HTTP method used, and the response code.
+All logs are preceded by the name of the service we are communicating with.
 
 
-### Testowanie
-
-#### Zaślepki
-
-Aby zweryfikować różne scenariusze działania naszego klienta HTTP należy odpowiednio zaślepić wołane endpointy w testach. W tym celu użyjemy biblioteki [wiremock](https://wiremock.org/).
-
-Dość istotne jest, aby szczegóły techniczne tworzonych zaślepek nie wyciekały do testów.
-Test powinien opisywać testowane zachowanie i <ins>enkapsulować szczegóły techniczne</ins>.
-Zmiana frameworku do zaślepiania endpointów nie powinna mieć wpływu na sam test.
-W tym celu dla każdej usługi, dla której piszemy klienta tworzymy obiekt typu ```StubBuilder```. StubBuilder pozwala ukryć szczegóły stubbowania i weryfikacji wołanych endpointów za czytelnym API.
+To prevent redundancy in logging code across multiple clients, we can centralize it and reuse it.
+Error logging is managed within the ```handleHttpResponseAsList``` method.
+The only thing the developer needs to do is provide a business-oriented description of the failure using the ```failureMessage``` parameter.
+For logging technical aspects of our communication, such as the HTTP method used, the called URL, headers, and response code,
+interceptors are responsible and plugged in at the client configuration level in the ```createExternalServiceApi``` method.
 
 ```kotlin
-stubs.orderCoreService().willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
+inline fun <reified T> createExternalServiceApi(
+    webClientBuilder: WebClient.Builder,
+    properties: ConnectionProperties,
+): T =
+    webClientBuilder
+        .clientConnector(httpClient(properties))
+        .baseUrl(properties.baseUrl)
+        .defaultRequest { it.attribute(SERVICE_NAME, properties.clientName) }
+        .filter(logRequestInfo(properties.clientName))
+        .filter(logResponseInfo(properties.clientName))
+        .build()
+        .let { WebClientAdapter.create(it) }
+        .let { HttpServiceProxyFactory.builderFor(it).build() }
+        .createClient(T::class.java)
+
+
+fun logRequestInfo(clientName: String) = ExchangeFilterFunction.ofRequestProcessor { request ->
+    logger.info {
+        "[$clientName] method=[${request.method().name()}] url=${request.url()} headers: ${request.headers()}"
+    }
+    Mono.just(request)
+}
+
+fun logResponseInfo(clientName: String) = ExchangeFilterFunction.ofResponseProcessor { response ->
+    logger.info { "[$clientName] service responded with a status code= ${response.statusCode()}" }
+    Mono.just(response)
+}
 ```
 
-Czytając powyższy kod od razu wiemy z **jakim** serwisem odbywa się interakcja (Order Core Service) oraz **co** zostanie z niego zwrócone (Orders).
-Szczegóły techniczne stubbowanego enpointu, czyli **jak** to jest zrobione wyniesione zostały do obiektu StubBuilder'a. Testy powinny uwypuklać **co** i enkapsulować **jak**. Dzięki czemu mogą one pełnić role dokumentacji.
+Here's an example of a correctly logged interaction for successfully fetching a resource.
+
+![Screenshot](images/logs.png)
+
+Logs are like backups.
+It's only when they are needed, either because the business requests an analysis of a particular case or when resolving an incident,
+that we find out if we have them and how valuable they are.
+
+### Error handling
+A significant part of the client code is dedicated to error handling.
+It consists of two things: logging and throwing custom exceptions that encapsulate technical exceptions thrown by the underlying HTTP client.
+The very name of such a custom exception tells us exactly what went wrong.
+Additionally, based on these exceptions, visualizations can be created to show the state of our integration.
+
+When writing client code, we aim to highlight maximally how we send/retrieve data and hide the “noise“ that comes from error handling.
+The error handling is quite extensive but generic enough that the resulting code can be written once and reused when creating subsequent clients.
+In the case of service client using WebClient, error handling is located in the methods:```handleHttpResponseAsList```, ```handleHttpResponseAsEntity```, ```handleHttpResponse```.
+
+It's important to carefully consider all the cases we want to address and test them.
+A detailed description of the considered errors can be found in the **testing** section.
+In essence, the more cases we evaluate and handle, the simpler the analysis of potential errors will be.
+
+### Testing
+#### Stubs
+To verify different scenarios of our HTTP client, it is necessary to appropriately stub the called endpoints in tests.
+For this purpose, we will use the [WireMock](https://wiremock.org/) library.
+
+
+It is quite important that technical details of created stubs do not leak into the tests.
+The test should describe the behavior being tested and encapsulate technical details.
+Changing the framework for stubbing endpoints should not affect the test itself.
+To achieve this, for each service for which we are writing a service client, we create an object of type ```StubBuilder```.
+The ```StubBuilder``` allows hiding the details of stubbing and verifying the called endpoints behind a readable API.
+
+```kotlin
+stubs.orderManagementService().willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
+```
+
+Reading the above code, we immediately know **which** service is being interacted with (Order Management Service) and what will be returned from it (Orders).
+The technical details of the stubbed endpoint, for example, how it is done, have been abstracted into the StubBuilder object.
+Tests should emphasize "what" and encapsulate "how." This way, they can serve as documentation.
+The details of the stubbed endpoint are hidden behind the method ```willReturnOrdersFor```.
 
 ```kotlin
 fun willReturnOrdersFor(
@@ -134,86 +174,82 @@ fun willReturnOrdersFor(
         )
     )
 }
+
+private fun getOrdersFor(clientId: ClientId): MappingBuilder =
+    WireMock.get("/${clientId.clientId}/order")
+        .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON_VALUE))
 ```
-Szczegóły stubbowanego endpointy schowane są za metodą ```willReturnOrdersFor```
+
+#### Test Data
+
+The data returned by our stubs can be prepared in three ways:
+* Read the entire response from a file/string.
+* Prepare the response using objects used in the service for deserializing responses from called services.
+* Create a set of separate objects modeling the returned response from the service for testing purposes and use them to prepare the returned data.
+
+Which option to choose?
+To answer this question, one should analyze the advantages and disadvantages of each.
+
+##### A. Read response from a file/string.
+Creating responses is very fast and simple.
+It allows **verifying the contract** between the client and the supplier (at least at the time of writing the test).
+Imagine that during refactoring, one of the fields in the response object accidentally changes.
+In such a case, client tests will detect the defect before the code reaches production.
+
+On the other hand.
+Keeping data in files/strings is unfortunately difficult to maintain and reuse.
+Programmers often copy entire files for new tests, introducing minimal changes.
+There is a problem with naming these files and refactoring them when the called service introduces an incompatible change.
 
 
-#### Dane Testowe
-
-Dane zwracane przez nasze stubby możemy przygotować na 3 sposoby:
-
-
-- a) Odczytać cały response z pliku/stringa
-- b) Przygotować response z wykorzystaniem obiektów wykorzystywanych w usłudze do deserializacji odpowiedzi z wołanych serwisów.
-- c) Utworzyć zestaw osobnych obiektów modelujących zwracany response z usługi na potrzeby testów.
-
-Który wariant wybrać?
-Aby odpowiedzieć na to pytanie należy przeanalizować wady i zalety każdego z nich.
-
-
-###### Opcja A
-
-Tworzenie odpowiedzi z serwisów jest bardzo szybkie i proste.
-Pozwala **zweryfikować kontrakt** pomiędzy klientem a supplierem (przynajmniej na czas pisania testu). Wyobraźmy sobie, że podczas refactoringu przypadkowo zmianie uległo jego z pól w obiekcie odpowiedzi. W takim przypadku testy klienta wykryją powstały defekt, zanim kod jeszcze trafi na produkcję.
-
-Trzymanie danych w plikach/stringach jest niestety trudne w utrzymaniu i re-użyciu.
-Programiści czesto kopjują całe pliki na potrzeby nowych testów wprowadzając w nich minimalne zmiany. Pojawia się problem z nazywaniem tych plików i ich refactoringiem, kiedy wołany serwis wprowadzić niekompatybilną zmianę.
-
-
-###### Opcja B
-
-Pozwala pisać jednolinijkowe, czytelne asercje oraz maksymalnie re-używać powstałe już dane.
-Zwłaszcza z wykorzystaniem [test data builders](https://www.natpryce.com/articles/000714.html).
+##### B. Use existing response objects
+It allows writing one-liner, readable assertions and maximally reusing already created data, especially using [test data builders](https://www.natpryce.com/articles/000714.html).
 
 ```kotlin
     @Test
     fun `should return orders for a given clientId`(): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        val clientOrders = OrderCoreServiceFixture.ordersPlacedByPolishCustomer(clientId = clientId.toString())
-        stubs.orderCoreService().willReturnOrdersFor(clientId, response = clientOrders)
+        val clientOrders = OrderManagementServiceFixture.ordersPlacedByPolishCustomer(clientId = clientId.toString())
+        stubs.orderManagementService().willReturnOrdersFor(clientId, response = clientOrders)
 
         // when
-        val response = orderCoreServiceClient.getOrdersFor(clientId)
+        val response = orderManagementServiceClient.getOrdersFor(clientId)
 
         // then
         response shouldBe clientOrders
     }
 
 ```
-Z drugiej strony defekt w postaci **naruszenia kontraktu** pomiędzy klientem a supplier nie zostanie wyłapany. W Efekcie możemy mieć idealnie przetestowaną komunikację w testach integracyjncyh, która na produkcji nie zadziała.
+However, a defect in the form of a **contract violation** between the client and supplier won't be caught.
+As a result, we might have perfectly tested communication in integration tests that will not work in production.
 
+##### C. Create separate response objects
+It has all the advantages of options A and B, including maintainability, reusability, and verification of the contract between the client and the supplier.
+Unfortunately, maintaining a separate model for testing purposes comes with some overhead and requires discipline on the developers' side, which can be challenging to maintain.
 
-###### Opcja C
+Which option to choose? Personally, I prefer a hybrid of options A and B.
+For the purpose of testing the “happy path“ in client tests, I return a response that is entirely stored as a string (alternatively, it can be read from a file).
+Such a test allows not only to verify the contract but also the correctness of deserializing the received response into an object.
 
-Ma wszystkie zalety opcji A oraz B, czyli utrzymywalność, re-używalność oraz weryfikację kontraktu pomiędzy klientem a supplierem. Niestety utrzymanie osobnego modelu na potrzeby testów wiąże z pewnym narzutem i dyscypliną po stronie developerów, którą trudno utrzymać.
+In other tests (cache, adapter), as well as at the end-to-end level, I create responses returned by the stubbed endpoint using the same objects to which the received response will be deserialized.
 
-Którą opcję wybrać?
-Osobiście preferuję hybrydę opcji A oraz B.
-Na potrzeby testu ścieżki „happy path’” w testach klienta zwracam response, który jest w całości zapisany w stringu (alternatywnie można go odczytać z pliku). Taki test pozwala nie tylko zweryfikować kontrakt, ale również poprawność dezerializacji otrzymanej odpowiedzi do obiektu.
+It's worthwhile to extract sample test data into a dedicated class, such as a Fixture class, for each integration (for example ```OrderManagementServiceFixture```).
+This allows for better reuse of existing code and enhances the readability of the tests themselves.
 
-W pozostałych testach (cache, adapter) oraz na poziomie testów end-to-end odpowiedzi zwracane przez stubbowany endpoint tworzę z wykorzystaniem tych samych obiektów do którym następnie będe deserializował otrzymaną odpowiedź.
-
-Przykładowe dane testowe warto wynieść do osobnej dedykowanej klasy typu Fixture dla każdej integracji (e.g. ```OrderCoreServiceFixture```). Pozwala to lepiej reużywać powstały już kod i podnosi czytelność samych testów.
-
-
-#### Scenariusze Testowe
-
-
-###### Happy Path
-
-**Pobranie zasobu**</br>
-Weryfikacja czy klient jest w stanie pobrać dane z zaślepionego wcześniej endpointu oraz zdeserializować je do obiektu odpowiedzi.
+#### Test Scenarios
+##### Happy Path
+Fetching a resource — verification whether the client can retrieve data from the previously stubbed endpoint and deserialize it into a response object.
 
 ```kotlin
 @Test
 fun `should return orders for a given clientId`(): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        stubs.orderCoreService().willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
+        stubs.orderManagementService().willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
 
         // when
-        val response = orderCoreServiceClient.getOrdersFor(clientId)
+        val response = orderManagementServiceClient.getOrdersFor(clientId)
 
         // then
         response.size shouldBe 1
@@ -226,12 +262,16 @@ fun `should return orders for a given clientId`(): Unit = runBlocking {
 }
 ```
 
-Sekcja asercji (then) może lekko przerażać, ale to rezultat struktury obiektu responsu, tego, w jaki sposób przygotowane zostały dane testowe oraz tego, co chcemy zweryfikować. 
-Ważną częścią testu dla happy path jest weryfikacja kontraktu między clientem a supplierem. Metoda ```ordersPlacedByPolishCustomer()``` zwraca przykładowy response gwarantowny przez suppliera (usługa order-core-service). Natomiast po stronie klienta tej usługi w teście następuje jego weryfikacja. Na sztywny przepisujemy fragmenty kontraktu z metody ```ordersPlacedByPolishCustomer()``` w spodziewane miejsca w obiekcie response w sekcji asercji. Ta duplikacja jest spodziewana i pożądana. To właśnie ona pozwala wykryć potencjalny defekt złamania kontraktu, który może się pojawić w wyniku błędów w strukturze obiektu responsu po stronie klienta.
+The assertion section might seem a bit intimidating, but it's a result of the structure of the response object, the way test data was prepared, and what we want to verify.
+An essential part of the happy path test is the verification of the contract between the client and the supplier.
+The ```ordersPlacedByPolishCustomer``` method returns a sample response guaranteed by the supplier (Order Management Service).
+On the client side of this service, its verification is performed in the test.
+We explicitly copy fragments of the contract from the ```ordersPlacedByPolishCustomer``` method into the expected places in the response object in the assertion section.
+This duplication is intentional and desired.
+It is precisely this duplication that allows detecting a potential defect in breaking the contract that may occur due to errors in the response object structure on the client side.
 
 
-**Wysłanie zasobu**</br>
-Weryfikacja czy klient wysyła dane na wskazany URL w formacie akceptowalnym przez zastubbowany wcześniej endpoint.
+Sending a resource — verification whether the client sends data to the specified URL in a format acceptable by the previously stubbed endpoint.
 
 ```kotlin
 @Test
@@ -247,7 +287,8 @@ fun `should successfully publish InvoiceCreatedEvent`(): Unit = runBlocking {
     stubs.hermes().verifyInvoiceCreatedEventPublished(event = invoiceCreatedEvent)
 }
 ```
-Stubbowane endpointy metod akceptujących request body (e.g. POST, PUT) nie powinny weryfikować wartości otrzymanego request body a jedynie jego <ins>strukturę</ins>.
+
+Stubbed endpoints for methods accepting request bodies (e.g., POST, PUT) should not verify the values of the received request body but only its <ins>structure</ins>.
 
 ```kotlin
 fun willAcceptInvoiceCreatedEvent() {
@@ -265,15 +306,13 @@ fun willAcceptInvoiceCreatedEvent() {
 }
 ```
 
-Zawartość request body weryfikujemy natomiast w sekcji asercji (// then). Tutaj również techniczne aspekty wykonania asercji chcemy ukryć za metodą.
-
+We verify the content of the request body in the assertion section.
+Here, we also want to hide the technical aspects of performing assertions behind a method.
 
 ```kotlin
 stubs.hermes().verifyInvoiceCreatedEventPublished(event = invoiceCreatedEvent)
-```
 
 
-```kotlin
 fun verifyInvoiceCreatedEventPublished(event: InvoiceCreatedEventDto) {
     WireMock.verify(1,
         WireMock.postRequestedFor(WireMock.urlPathEqualTo("/topics/${HermesApi.TOPIC_INVOICE_CREATED_EVENT}"))
@@ -284,20 +323,17 @@ fun verifyInvoiceCreatedEventPublished(event: InvoiceCreatedEventDto) {
 }
 ```
 
-Dlaczego nie warto łączyć stubbowania i weryfikacji requestu w jednej metodzie?
-Robienie zaślepek w ten sposób powoduje, że korzystanie z nich staje się mało komfortowe (niski Developer Experience). Nie w każdym teście bowiem chcemy dokładnie weryfikować co jest wysyłane w request body.
+Combining stubbing and request verification in one method is not recommended because it can lead to a less comfortable developer experience (DX).
+Creating stubs in this way makes their usage less convenient since not every test requires detailed verification of what is being sent in the request body.
+The vast majority of tests will stub the endpoint based on the principle:
+accept a given request as long as its structure is preserved and will verify hypotheses other than the content of the request body (mainly end-to-end tests).
 
-Zdecydowana większość testów będzie zaślepiać (stubbować) endpoint na zasadzie zaakcepuj danych request tak długo jak jego struktura jest zachowana i będzie weryfikowała inne hipotezy niż to co zostało wysłane w body requestu (głownie testy end-to-end).
+#####  Client-side errors
 
-
-###### Client Error - błąd po stronie klienta
-
-Dla błędów typu 4xx zweryfikować chcemy następujące przypadki:
-
-- a) Braku szukanego zasobu sygnalizowane kodem błędu 404 i customowym wyjątkiem ```ExternalServiceResourceNotFoundException```
-- b) Błąd walidacji sygnalizowany kodem błędu 422 i customowym wyjątkiem ```ExternalServiceRequestValidationException```
-- c) Pozostałem błędy dla dowolnego kodu rzutowane na błąd ```ExternalServiceClientException```
-
+For 4xx type errors, we want to verify the following cases:
+* The absence of the requested resource signaled by the response code 404 and a custom exception ```ExternalServiceResourceNotFoundException```
+* Validation error signaled by the response code 422 and a custom exception ```ExternalServiceRequestValidationException```
+* Any other 4xx type errors  should be cast to an ```ExternalServiceClientException```
 
 ```kotlin
 
@@ -310,11 +346,11 @@ Dla błędów typu 4xx zweryfikować chcemy następujące przypadki:
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        stubs.orderCoreService().willReturnResponseFor(clientId, status = statusCode, response = responseBody)
+        stubs.orderManagementService().willReturnResponseFor(clientId, status = statusCode, response = responseBody)
 
         // when
         val exception = shouldThrowAny {
-            orderCoreServiceClient.getOrdersFor(clientId)
+            orderManagementServiceClient.getOrdersFor(clientId)
         }
 
         // then
@@ -324,73 +360,103 @@ Dla błędów typu 4xx zweryfikować chcemy następujące przypadki:
     }
 ```
 
-W systemach rozproszonych błąd typu [404](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404) jest dość powszechny i może wynikać z chwilowej niespójności całego systemu (eventually consistent). Jego wystąpienie sygnalizuję wyjątkiem ```ExternalServiceResourceNotFoundException``` oraz logiem na poziomie warn. Tutaj jesteśmy zainteresowani bardziej skalą występowania niż analizą poszczególnych przypadków.
+In distributed systems, a [404](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404) response code is quite common and may result from temporary inconsistency across the entire system.
+Its occurrence is signaled by the ```ExternalServiceResourceNotFoundException``` exception and a warning-level log.
+Here, we are more interested in the scale of occurrences than analyzing individual cases.
 
+The situation looks a bit different in the case of responses with a code of [422](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422).
+If the request is rejected due to validation errors, either our service has a defect and produces incorrect data, or the data comes from another service (which is why it's crucial to log what we receive from external services).
+Alternatively, the error may be on the recipient side in the logic validating the received request.
+It's worth analyzing each such case, which is why errors of this type are logged at the error level and signaled by the ```ExternalServiceRequestValidationException``` exception.
 
-Sytuacja wygląda trochę inaczej w przypadku błędów o kodzie [422](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422).
-Jeżeli request został odrzucony z powodu błędów walidacji to albo nasza usługa ma defekt i produkuje błędne dane, albo pochodzą one z innej usługi (dlatego tak ważne jest, aby logować co przychodzi do nas z zewnętrznych serwisów). Ewentualnie błąd znajduje się po stronie odbiorcy w logice walidującej otrzymany request. Warto przeanalizować każdy taki przypadek dlatego błędy tego typu loguję na poziomie error i syngalizuję wyjątkiem ```ExternalServiceRequestValidationException```.
+Other errors from the 4xx family occur much less frequently.
+They are all marked by the ```ExternalServiceClientException``` exception and logged at the error level.
 
-Pozostałe błędy z rodziny 4xx występują zdecydowanie rzadziej.
-Oznaczam jest wszystkie poprzez wyjątek ```ExternalServiceClientException``` i logiem na poziomie error. 
+##### Server-side errors
+Regardless of the reason for a 5xx error, all of them are logged at the warn level because we have no control over them.
+They are signaled by the ```ExternalServiceServerException``` exception.
+Similar to 404 errors, we are more interested in aggregate information about the number of such errors rather than analyzing each case individually, hence the warn log level.
 
-###### Server Error - błąd po stronie servera
+In tests, we consider two cases because the response from the service may or may not have a body.
+If the response has a body, we want to log it.
 
-Bez względu na powód wystąpienia błędu 5xx loguje je wszystkie na poziomie warn i sygnalizujemy wyjątkiem ```ExternalServiceServerException```. Podobnie jak w przypadku błędów 404 tutaj również interesuje nas zbiorcza infomracja o tym ile tego typu błędów jest niż analiza każdego przypadku z osobna - dlatego poziom logowania warn.
-
-W testach rozpatrujemy dwa przypadki poniżewasz response z usługi może posiadać body albo nie. Jeżeli response posiada body to chcemy je zalogować. 
-
-
-###### Read Timeout
-
-Jeżeli konfiguracja naszego klienta HTTP określa timeout na czas odpowiedzi, warto napisać test integracyjny, który zweryfikuje czy klienta został poprawnie skonfigurowany.
-Opóźnienie stubbowane enpointu można zasymulować za pomocą metody ```withFixedDelay```.
-
-
-```kotlin
-        stubs.orderCoreService()
-            .withDelay(properties.readTimeout.toInt())
-            .willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer(clientId = clientId.toString()))
-```
-
-Czy to jest testowanie propertisów w testach? Nie.
-Jest to weryfikacja, czy konfiguracja która pochodzi z propertisów faktycznie została zaaplikowana dla danego klienta. Dostarczenie odpowiedzi w określonym czasie może być częścią wymagań niefunkcjonalnych i wymaga przetestowania. 
-
-###### Niepoprawny response body
-
-Rozpatrywane przypadki:
-- response body nie zawiera wymaganych pól
-- response body jest pusty
-- response ma niepoprawny format
-
-Błędy tego typu sygnalizowane są poprzez  ```ExternalServiceIncorrectResponseBodyException``` i logiem na poziomie ERROR.
-
-
-###### Weryfikacja metryk
-
-Metryki stanowią ważne źródło informacji o zachowaniu naszego klienta (patrz sekcja metryki). Aby móc w prosty sposób rozróżnić metryki generowane przez różnych klientów warto wzbogacić je o tag **service.name** nadając mu odpowiednią wartość.
-
-Poniższy test sprawdza czy jedna z matryk generowana przez naszego klienta **http.client.requests** zawiera wspomniany tag.
-
+##### Read Timeout
+If the configuration of our HTTP client specifies a timeout for the response time, it's worthwhile to write an integration test that verifies the client's configuration.
+Simulating the delay of the stubbed endpoint can be achieved using the ```withFixedDelay``` method from wiremock.
 
 ```kotlin
     @Test
-    fun `verify custom tags for order-core-service (metrics)`(): Unit = runBlocking {
+    fun `when service returns above timeout threshold then throw exception`(): Unit = runBlocking {
         // given
-        meterRegistry.clear()
-        // and
         val clientId = anyClientId()
-        stubs.orderCoreService()
-            .willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer(clientId = clientId.toString()))
+
+        stubs.orderManagementService()
+            .withDelay(properties.readTimeout.toInt())
+            .willReturnOrdersFor(
+                clientId,
+                response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
+            )
 
         // when
-        orderCoreServiceClient.getOrdersFor(clientId)
-
+        val exception = shouldThrow<ExternalServiceReadTimeoutException> {
+            orderManagementServiceClient.getOrdersFor(clientId)
+        }
         // then
-        meterRegistry.get("http.client.requests").tags("service.name", properties.clientName).timer()
-            .count() shouldBeExactly 1
+        exception.message shouldContain clientId.clientId.toString()
+        exception.message shouldContain properties.clientName
     }
 ```
 
-### Metryki
+No, this is not testing properties in tests.
+It is a verification to ensure that the configuration derived from properties has indeed been applied to the given client.
+Ensuring a response within a specified time frame might be part of non-functional requirements and warrants testing.
 
-TODO
+##### Invalid Response Body
+Considered cases:
+* Response body does not contain required field.
+* Response body is empty.
+* Response has an incorrect format.
+
+Errors of this type are signaled through ```ExternalServiceIncorrectResponseBodyException``` and logged at the error level.
+
+
+### Metrics
+When dealing with HTTP clients, it's essential to monitor several aspects: response times, throughput, and error rates.
+To differentiate metrics generated by different clients easily, it's advisable to include a ```service.name``` tag with the respective client's name.
+
+In HTTP clients offered by the Spring framework (WebClient, RestClient), metrics are enabled out-of-the-box if we create them using predefined builders (WebClient.Builder, RestClient.Builder).
+However, for other technologies, third-party solutions must be employed.
+
+#### Response Time
+Measuring the response time of HTTP clients allows us to identify bottlenecks.
+At which percentile should we set such a metric?
+Generally, the more requests a client generates, the higher the percentile we should aim for.
+Sometimes, issues become visible only at high percentiles (P99, P99.9) for a very high volume of requests.
+
+![Screenshot](images/response_time.png)
+
+#### Throughput
+Number of requests that our application sends to external services per second (RPS).
+An auxiliary metric for the response time metric, where response time is always considered in the context of the generated traffic.
+
+![Screenshot](images/rps.png)
+
+#### Error Rate
+Counting responses with codes 4xx/5xx.
+Here, we are interested in visualizing how many such errors occurred within a specific timeframe.
+The number of errors we analyze depends on the overall traffic, therefore, both metrics should be expressed in the same units, usually requests per second.
+For high traffic and a small number of errors, we can expect that the presented values will be in the order of thousandths.
+
+![Screenshot](images/errors.png)
+
+## Summary
+[Microservices Architecture](https://martinfowler.com/articles/microservices.html) relies heavily on network communication.
+The most common method of communication is REST API calls between different services.
+Writing integration code between services involves more than just invoking a URL and parsing a response.
+Logs, error handling, and metrics are crucial for creating a stable and fault-tolerant microservices environment.
+Developers should have tools that take care of these aspects, enabling fast and reliable development of such integrations.
+However, tools alone are insufficient. We also need established rules and guidelines that allow us to write readable and maintainable code, both in production and tests.
+
+
+## Code examples
+To explore comprehensive examples, including the usage of WebClient and other HTTP clients, check out [the GitHub repository](https://github.com/Klimiec/webclients).
