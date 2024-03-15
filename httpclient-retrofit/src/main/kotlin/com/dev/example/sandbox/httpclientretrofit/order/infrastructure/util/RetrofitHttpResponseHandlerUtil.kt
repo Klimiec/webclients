@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger {}
 
 fun <T> handleHttpResponse(
     response: NetworkResponse<List<T>, String>,
-    failureMessage: String,
+    failureMessage: String
 ): List<T> {
     return when (response) {
         is NetworkResponse.Success -> response.body
@@ -35,7 +35,7 @@ fun <T> handleHttpResponse(
 
 fun <T : Any> handleHttpResponse(
     response: NetworkResponse<T, String>,
-    failureMessage: String,
+    failureMessage: String
 ): T {
     return when (response) {
         is NetworkResponse.Success -> response.body
@@ -58,7 +58,7 @@ fun <T : Any> handleHttpResponse(
 
 private fun handleErrorResponse(
     response: NetworkResponse.NetworkError,
-    failureMessage: String,
+    failureMessage: String
 ) {
     if (response.isReadTimeout()) {
         logger.warn(response.error) { "$failureMessage. Service failed to deliver response due to read timeout" }
@@ -75,7 +75,7 @@ private fun handleErrorResponse(
 
 private fun handleErrorResponse(
     response: NetworkResponse.ServerError<String>,
-    failureMessage: String,
+    failureMessage: String
 ) {
     when (response.code) {
         in 400..499 -> handle4xxClientError(response, failureMessage)
@@ -87,7 +87,7 @@ private fun handleErrorResponse(
 
 private fun handle4xxClientError(
     response: NetworkResponse.ServerError<String>,
-    failureMessage: String,
+    failureMessage: String
 ) {
     val responseBody = if (response.body.isNullOrBlank()) DEFAULT_SERVER_RESPONSE else response.body!!
     if (response.code == 404) {
@@ -103,7 +103,7 @@ private fun handle4xxClientError(
 
 private fun handle5xxServerError(
     response: NetworkResponse.ServerError<String>,
-    failureMessage: String,
+    failureMessage: String
 ) {
     val responseBody = if (response.body.isNullOrBlank()) DEFAULT_SERVER_RESPONSE else response.body!!
     logger.warn { "$failureMessage .Service responded with a server error= ${response.code} .Response body= $responseBody" }
@@ -112,7 +112,7 @@ private fun handle5xxServerError(
 
 private fun handle3xxRedirection(
     response: NetworkResponse.ServerError<String>,
-    failureMessage: String,
+    failureMessage: String
 ) {
     val responseBody = if (response.body.isNullOrBlank()) DEFAULT_SERVER_RESPONSE else response.body!!
     logger.error { "$failureMessage. Service responded with a redirection status code= ${response.code}. Response body= $responseBody" }

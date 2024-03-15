@@ -20,8 +20,10 @@ dependencies {
 plugins {
     id("org.springframework.boot") version "3.2.1"
     id("io.spring.dependency-management") version "1.1.4"
-    kotlin("jvm") version "1.9.21"
-    kotlin("plugin.spring") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.spring") version "1.9.22"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
+    id("org.jlleitschuh.gradle.ktlint-idea") version "11.6.1"
 }
 
 group = "com.dev.sandbox.restclient"
@@ -33,9 +35,8 @@ java {
 
 repositories {
     mavenCentral()
-    maven ("https://jitpack.io" )
+    maven("https://jitpack.io")
 }
-
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
@@ -85,3 +86,7 @@ val unitTest = task<Test>("unitTest") {
 }
 
 tasks.check { dependsOn(integrationTest, unitTest) }
+
+ktlint {
+    version.set("0.47.1")
+}

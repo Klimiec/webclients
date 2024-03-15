@@ -14,13 +14,13 @@ private val logger = KotlinLogging.logger {}
 
 class HermesClient(
     private val httpClient: HttpClient,
-    private val clientName: String,
+    private val clientName: String
 ) {
     suspend fun publish(event: InvoiceCreatedEventDto) {
         logger.info { "[$clientName] Publishing InvoiceCreatedEvent $event" }
         handleHttpResponse(
             request = {
-                httpClient.post{
+                httpClient.post {
                     url.takeFrom("/topics/topic-invoice-created")
                     contentType(ContentType.Application.Json)
                     setBody(event)

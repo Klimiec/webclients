@@ -10,13 +10,12 @@ import org.springframework.web.client.RestClient
 
 @Configuration
 @EnableConfigurationProperties(value = [HermesConnectionProperties::class])
-
 class HermesConfiguration {
 
     @Bean
     fun hermesClient(
         restClientBuilder: RestClient.Builder,
-        hermesProperties: HermesConnectionProperties,
+        hermesProperties: HermesConnectionProperties
     ) = HermesClient(
         createRestClient(restClientBuilder, hermesProperties),
         hermesProperties.clientName
@@ -24,9 +23,8 @@ class HermesConfiguration {
 
     @Bean
     fun hermesAdapter(
-        hermesClient: HermesClient,
+        hermesClient: HermesClient
     ) = HermesAdapter(hermesClient)
-
 }
 
 @ConfigurationProperties(prefix = "services.hermes")
@@ -34,5 +32,5 @@ data class HermesConnectionProperties(
     override var clientName: String,
     override var baseUrl: String,
     override var connectionTimeout: Int,
-    override var readTimeout: Long,
+    override var readTimeout: Long
 ) : ConnectionProperties

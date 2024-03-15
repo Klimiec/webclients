@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger {}
 
 class OrderManagementServiceClient(
     private val restClient: RestClient,
-    private val clientName: String,
+    private val clientName: String
 ) {
     fun getOrdersFor(clientId: ClientId): List<Order> {
         logger.info { "[$clientName] Get orders for a clientId= ${clientId.clientId}" }

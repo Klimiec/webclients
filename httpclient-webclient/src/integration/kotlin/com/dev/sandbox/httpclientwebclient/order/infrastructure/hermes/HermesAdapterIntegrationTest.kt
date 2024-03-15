@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Instant
 
-
 @WireMockTest(httpPort = 8082)
 class HermesAdapterIntegrationTest : BaseIntegrationTest() {
 

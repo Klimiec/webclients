@@ -16,7 +16,7 @@ private val logger = KotlinLogging.logger {}
 fun <T> handleHttpResponse(
     request: RestClient.RequestHeadersSpec<*>,
     failureMessage: String,
-    bodyType: ParameterizedTypeReference<List<T>>,
+    bodyType: ParameterizedTypeReference<List<T>>
 ): List<T> {
     return try {
         request.retrieve()
@@ -41,7 +41,7 @@ fun <T> handleHttpResponse(
 fun <T> handleHttpResponse(
     request: RestClient.RequestHeadersSpec<*>,
     failureMessage: String,
-    bodyType: Class<T>,
+    bodyType: Class<T>
 ): T {
     return try {
         request.retrieve()
@@ -65,7 +65,7 @@ fun <T> handleHttpResponse(
 
 fun handleHttpResponse(
     request: RestClient.RequestHeadersSpec<*>,
-    failureMessage: String,
+    failureMessage: String
 ) {
     try {
         request.retrieve()
@@ -89,7 +89,7 @@ fun handleHttpResponse(
 
 private fun handle4xxClientError(
     response: ClientHttpResponse,
-    failureMessage: String,
+    failureMessage: String
 ) {
     if (response.statusCode.value() == 404) {
         logger.warn { "$failureMessage. Resource not found(404). Response body= $response" }

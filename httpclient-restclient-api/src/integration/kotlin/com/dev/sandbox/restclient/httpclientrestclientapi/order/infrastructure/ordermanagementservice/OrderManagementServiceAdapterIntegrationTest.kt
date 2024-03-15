@@ -1,5 +1,6 @@
 package com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice
 
+import com.dev.sandbox.restclient.httpclientrestclientapi.BaseIntegrationTest
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.GetOrderIds
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.OrderId
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
@@ -11,8 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 @WireMockTest(httpPort = 8082)
-internal class OrderManagementServiceAdapterIntegrationTest :
-    com.dev.sandbox.restclient.httpclientrestclientapi.BaseIntegrationTest() {
+internal class OrderManagementServiceAdapterIntegrationTest : BaseIntegrationTest() {
 
     @Autowired
     lateinit var orderManagementServiceAdapter: GetOrderIds

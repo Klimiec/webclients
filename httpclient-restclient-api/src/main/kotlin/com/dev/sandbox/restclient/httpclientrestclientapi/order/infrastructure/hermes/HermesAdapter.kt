@@ -5,13 +5,10 @@ import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.PublishIn
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.hermes.request.mapToPublishInvoiceCreatedEventDto
 
 class HermesAdapter(
-    private val hermesClient: HermesClient,
+    private val hermesClient: HermesClient
 ) : PublishInvoiceCreatedEvent {
-
     override fun publish(event: InvoiceCreated) {
         event.mapToPublishInvoiceCreatedEventDto()
             .let { hermesClient.publish(event = it) }
     }
 }
-
-

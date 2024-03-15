@@ -4,7 +4,6 @@ import com.dev.example.httpclientwebclient.order.domain.ClientId
 import com.dev.example.httpclientwebclient.order.infrastructure.ordermanagementservice.response.Order
 import java.util.UUID
 
-
 object OrderManagementServiceFixture {
 
     fun ordersPlacedByPolishCustomer(
@@ -14,7 +13,7 @@ object OrderManagementServiceFixture {
         price: Order.Price = Order.Price(
             amount = "1500",
             currency = "PLN"
-        ),
+        )
     ) = listOf(Order(orderId, categoryId, "PL", clientId, price))
 
     fun ordersPlacedByPolishCustomer() = """

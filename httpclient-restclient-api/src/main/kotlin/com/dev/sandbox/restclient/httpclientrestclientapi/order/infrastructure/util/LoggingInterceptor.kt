@@ -12,7 +12,7 @@ class LoggingInterceptor(private val clientName: String) : ClientHttpRequestInte
     override fun intercept(
         request: HttpRequest,
         body: ByteArray,
-        execution: ClientHttpRequestExecution,
+        execution: ClientHttpRequestExecution
     ): ClientHttpResponse {
         logger.info { "[$clientName] method=[${request.method}] url=${request.uri} headers: ${request.headers}" }
         val response = execution.execute(request, body)

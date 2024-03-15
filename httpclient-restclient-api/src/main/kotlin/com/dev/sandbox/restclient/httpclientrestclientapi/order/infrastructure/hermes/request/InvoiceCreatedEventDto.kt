@@ -3,5 +3,5 @@ package com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.
 data class InvoiceCreatedEventDto(
     val invoiceId: String,
     val orderId: String,
-    val timestamp: String,
+    val timestamp: String
 )

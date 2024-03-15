@@ -11,7 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.jackson.jackson
 
-
 fun createHttpClient(properties: ConnectionProperties) =
     HttpClient(Apache5) {
         expectSuccess = true
@@ -38,11 +37,9 @@ fun createHttpClient(properties: ConnectionProperties) =
         }
     }
 
-
 interface ConnectionProperties {
     var clientName: String
     var baseUrl: String
     var connectionTimeout: Long
     var readTimeout: Long
 }
-

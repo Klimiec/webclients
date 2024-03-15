@@ -4,7 +4,6 @@ import com.dev.example.sandbox.httpclientretrofit.order.domain.ClientId
 import com.dev.example.sandbox.httpclientretrofit.order.infrastructure.ordermanagementservice.response.Order
 import java.util.UUID
 
-
 object OrderCoreServiceFixture {
 
     fun ordersPlacedByPolishCustomer(
@@ -14,9 +13,8 @@ object OrderCoreServiceFixture {
         price: Order.Price = Order.Price(
             amount = "1500",
             currency = "PLN"
-        ),
+        )
     ) = listOf(Order(orderId, categoryId, "PL", clientId, price))
-
 
     fun ordersPlacedByPolishCustomer() = """
         [

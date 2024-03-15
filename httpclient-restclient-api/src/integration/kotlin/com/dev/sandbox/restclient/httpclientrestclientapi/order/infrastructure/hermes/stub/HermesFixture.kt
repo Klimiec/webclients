@@ -3,7 +3,6 @@ package com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.hermes.request.InvoiceCreatedEventDto
 
 object HermesFixture {
-
     fun invoiceCreatedEvent() = InvoiceCreatedEventDto(
         invoiceId = "3cc58510-c767-4cc4-8e67-ae1adf201ead",
         orderId = "63150dfe-2044-472b-a579-f2f2977675d2",

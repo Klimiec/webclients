@@ -5,7 +5,7 @@ import com.dev.example.sandbox.httpclientretrofit.order.domain.PublishInvoiceCre
 import com.dev.example.sandbox.httpclientretrofit.order.infrastructure.hermes.request.mapToPublishInvoiceCreatedEventDto
 
 class HermesAdapter(
-    private val hermesClient: HermesClient,
+    private val hermesClient: HermesClient
 ) : PublishInvoiceCreatedEvent {
 
     override suspend fun publish(event: InvoiceCreated) {
@@ -13,5 +13,3 @@ class HermesAdapter(
             .let { hermesClient.publish(event = it) }
     }
 }
-
-

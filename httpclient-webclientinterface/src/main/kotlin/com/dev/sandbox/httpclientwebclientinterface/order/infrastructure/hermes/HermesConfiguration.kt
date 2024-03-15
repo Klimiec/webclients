@@ -10,13 +10,12 @@ import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
 @EnableConfigurationProperties(value = [HermesConnectionProperties::class])
-
 class HermesConfiguration {
 
     @Bean
     fun hermesClient(
         webClientBuilder: WebClient.Builder,
-        hermesProperties: HermesConnectionProperties,
+        hermesProperties: HermesConnectionProperties
     ): HermesClient =
         HermesClient(
             createExternalServiceApi(webClientBuilder, hermesProperties),
@@ -25,7 +24,7 @@ class HermesConfiguration {
 
     @Bean
     fun hermesAdapter(
-        hermesClient: HermesClient,
+        hermesClient: HermesClient
     ) = HermesAdapter(hermesClient)
 }
 
@@ -34,5 +33,5 @@ data class HermesConnectionProperties(
     override var clientName: String,
     override var baseUrl: String,
     override var connectionTimeout: Int,
-    override var readTimeout: Long,
+    override var readTimeout: Long
 ) : ConnectionProperties

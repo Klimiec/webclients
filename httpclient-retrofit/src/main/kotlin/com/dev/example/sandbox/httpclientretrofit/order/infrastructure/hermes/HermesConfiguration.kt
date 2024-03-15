@@ -11,19 +11,18 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @EnableConfigurationProperties(value = [HermesConnectionProperties::class])
-
 class HermesConfiguration {
 
     @Bean
     fun hermesAdapter(
-        hermesClient: HermesClient,
+        hermesClient: HermesClient
     ) = HermesAdapter(hermesClient)
 
     @Bean
     fun hermesClient(
         hermesProperties: HermesConnectionProperties,
         objectMapper: ObjectMapper,
-        registry: MeterRegistry,
+        registry: MeterRegistry
     ) = HermesClient(
         createExternalServiceApi(hermesProperties, objectMapper, registry),
         hermesProperties.clientName
@@ -35,5 +34,5 @@ data class HermesConnectionProperties(
     override var clientName: String,
     override var baseUrl: String,
     override var connectionTimeout: Long,
-    override var readTimeout: Long,
+    override var readTimeout: Long
 ) : ConnectionProperties

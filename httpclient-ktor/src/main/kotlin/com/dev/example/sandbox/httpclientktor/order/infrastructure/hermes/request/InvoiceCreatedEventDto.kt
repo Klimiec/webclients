@@ -3,5 +3,5 @@ package com.dev.example.sandbox.httpclientktor.order.infrastructure.hermes.reque
 data class InvoiceCreatedEventDto(
     val invoiceId: String,
     val orderId: String,
-    val timestamp: String,
+    val timestamp: String
 )

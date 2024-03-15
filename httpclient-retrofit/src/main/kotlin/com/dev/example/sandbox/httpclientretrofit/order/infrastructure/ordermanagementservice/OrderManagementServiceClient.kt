@@ -9,7 +9,7 @@ private val logger = KotlinLogging.logger {}
 
 class OrderManagementServiceClient(
     private val orderManagementServiceApi: OrderManagementServiceApi,
-    private val clientName: String,
+    private val clientName: String
 ) {
     suspend fun getOrdersFor(clientId: ClientId): List<Order> {
         logger.info { "[$clientName] Get orders for a clientId= ${clientId.clientId}" }

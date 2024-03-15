@@ -16,7 +16,6 @@ fun createRestClient(restClientBuilder: RestClient.Builder, properties: Connecti
         .build()
 
 private fun requestFactory(properties: ConnectionProperties): ClientHttpRequestFactory {
-
     val requestConfigBuilder = RequestConfig.custom()
         .setConnectionRequestTimeout(Timeout.ofMilliseconds(100))
         .setResponseTimeout(Timeout.ofMilliseconds(properties.readTimeout))
@@ -39,4 +38,3 @@ interface ConnectionProperties {
     var connectionTimeout: Int
     var readTimeout: Long
 }
-

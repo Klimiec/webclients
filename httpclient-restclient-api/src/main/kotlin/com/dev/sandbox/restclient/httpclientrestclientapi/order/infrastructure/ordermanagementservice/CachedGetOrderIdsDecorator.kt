@@ -10,7 +10,7 @@ private val logger = KotlinLogging.logger {}
 
 class CachedGetOrderIdsDecorator(
     private val orderManagementServiceAdapter: OrderManagementServiceAdapter,
-    private val cache: Cache<ClientId, List<OrderId>>,
+    private val cache: Cache<ClientId, List<OrderId>>
 ) : GetOrderIds {
     override fun getOrderIdsFor(clientId: ClientId): List<OrderId> =
         cache.get(clientId) {

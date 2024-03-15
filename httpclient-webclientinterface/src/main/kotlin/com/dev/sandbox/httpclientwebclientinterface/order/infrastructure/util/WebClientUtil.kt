@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger {}
 
 inline fun <reified T> createExternalServiceApi(
     webClientBuilder: WebClient.Builder,
-    properties: ConnectionProperties,
+    properties: ConnectionProperties
 ): T =
     webClientBuilder
         .clientConnector(httpClient(properties))
@@ -30,14 +30,14 @@ inline fun <reified T> createExternalServiceApi(
         .let { HttpServiceProxyFactory.builderFor(it).build() }
         .createClient(T::class.java)
 
-
 fun httpClient(properties: ConnectionProperties) = ReactorClientHttpConnector(
     HttpClient.create()
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.connectionTimeout)
         .doOnConnected {
             it.addHandlerLast(ReadTimeoutHandler(properties.readTimeout, TimeUnit.MILLISECONDS))
             it.addHandlerLast(WriteTimeoutHandler(3000, TimeUnit.MILLISECONDS))
-        })
+        }
+)
 
 fun logRequestInfo(clientName: String) = ExchangeFilterFunction.ofRequestProcessor { request ->
     logger.info {
@@ -51,11 +51,9 @@ fun logResponseInfo(clientName: String) = ExchangeFilterFunction.ofResponseProce
     Mono.just(response)
 }
 
-
 interface ConnectionProperties {
     var clientName: String
     var baseUrl: String
     var connectionTimeout: Int
     var readTimeout: Long
 }
-

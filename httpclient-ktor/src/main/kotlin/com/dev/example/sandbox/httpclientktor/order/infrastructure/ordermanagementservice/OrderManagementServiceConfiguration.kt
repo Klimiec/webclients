@@ -16,7 +16,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
 
-
 @Configuration
 @EnableConfigurationProperties(value = [OrderManagementServiceConnectionProperties::class, OrderManagementServiceCacheProperties::class])
 class OrderManagementServiceConfiguration {
@@ -25,7 +24,7 @@ class OrderManagementServiceConfiguration {
     fun orderManagementServiceAdapter(
         orderManagementServiceClient: OrderManagementServiceClient,
         orderManagementServiceCacheProperties: OrderManagementServiceCacheProperties,
-        meterRegistry: MeterRegistry,
+        meterRegistry: MeterRegistry
     ): GetOrderIds = OrderManagementServiceAdapter(orderManagementServiceClient).let { orderManagementServiceAdapter ->
         if (orderManagementServiceCacheProperties.enabled) {
             val cache = Caffeine.newBuilder()
@@ -42,7 +41,7 @@ class OrderManagementServiceConfiguration {
     @Bean
     fun orderManagementServiceClient(
         orderManagementServiceProperties: OrderManagementServiceConnectionProperties,
-        objectMapper: ObjectMapper,
+        objectMapper: ObjectMapper
     ) = OrderManagementServiceClient(
         createHttpClient(orderManagementServiceProperties),
         orderManagementServiceProperties.clientName
@@ -54,7 +53,7 @@ data class OrderManagementServiceConnectionProperties(
     override var clientName: String,
     override var baseUrl: String,
     override var connectionTimeout: Long,
-    override var readTimeout: Long,
+    override var readTimeout: Long
 ) : ConnectionProperties
 
 @ConfigurationProperties(prefix = "services.order-management-service.cache")
@@ -62,5 +61,5 @@ data class OrderManagementServiceCacheProperties(
     override var name: String,
     override var enabled: Boolean,
     override var size: Long,
-    override var expireAfter: Duration,
+    override var expireAfter: Duration
 ) : CacheProperties

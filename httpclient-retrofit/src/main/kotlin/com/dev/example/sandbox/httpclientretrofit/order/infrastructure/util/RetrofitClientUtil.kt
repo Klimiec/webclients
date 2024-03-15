@@ -14,11 +14,10 @@ import retrofit2.converter.jackson.JacksonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.util.concurrent.TimeUnit
 
-
 inline fun <reified T> createExternalServiceApi(
     properties: ConnectionProperties,
     objectMapper: ObjectMapper,
-    registry: MeterRegistry,
+    registry: MeterRegistry
 ): T {
     return Retrofit.Builder()
         .client(okHttpClient(properties, registry))

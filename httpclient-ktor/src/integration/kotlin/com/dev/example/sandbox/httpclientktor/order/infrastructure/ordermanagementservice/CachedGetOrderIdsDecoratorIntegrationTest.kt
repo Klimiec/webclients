@@ -41,36 +41,36 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
 
     @Test
     fun `should not call external service when value is already present in the cache`(): Unit = runBlocking {
-        //given
+        // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
             clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
 
-        //and: first call for OrderIds with "clientId" should populate cache
+        // and: first call for OrderIds with "clientId" should populate cache
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientId)
 
-        //when: call for OrderIds with "clientId" once again
+        // when: call for OrderIds with "clientId" once again
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientId)
 
-        //then: second call for OrderIds with "clientId" should not call external service
+        // then: second call for OrderIds with "clientId" should not call external service
         stubs.orderManagementService().verifyGetOrdersCalled(count = 1, clientId)
 
-        //and: there is value in cache for key "clientId"
+        // and: there is value in cache for key "clientId"
         cache.getIfPresent(clientId) shouldNotBe null
     }
 
     @Test
     fun `should evict cache when size limit of the cache is exceeded`(): Unit = runBlocking {
-        //given
+        // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
             clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientId)
-        //and: populate cache to exceed the threshold by 1
+        // and: populate cache to exceed the threshold by 1
         repeat(cacheProperties.size.toInt()) {
             val someClientId = anyClientId()
             stubs.orderManagementService().willReturnOrdersFor(
@@ -79,15 +79,15 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
             )
             cachedOrderManagementServiceAdapter.getOrderIdsFor(someClientId)
         }
-        //when: await the completion of the cache eviction
+        // when: await the completion of the cache eviction
         cache.cleanUp()
-        //then
+        // then
         cache.getIfPresent(clientId) shouldBe null
     }
 
     @Test
     fun `should remove entry from cache after threshold period is passed since the last write`(): Unit = runBlocking {
-        //given
+        // given
         val clientIdA = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
             clientIdA,
@@ -95,30 +95,29 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
         )
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientIdA)
 
-        //when
+        // when
         Thread.sleep(cacheProperties.expireAfter.toMillis())
 
-        //and: await the completion of the eviction
+        // and: await the completion of the eviction
         cache.cleanUp()
 
-        //then
+        // then
         cache.getIfPresent(clientIdA) shouldBe null
-
     }
 
     @Test
     fun `verify cache metrics contain cache name as a tag`(): Unit = runBlocking {
-        //given
+        // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
             clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
 
-        //when
+        // when
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientId)
 
-        //then
+        // then
         meterRegistry.get("cache.loads").tags("cache", cacheProperties.name).timer().count() shouldBeGreaterThan 0
     }
 

@@ -6,5 +6,4 @@ import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.o
 class ExternalServiceStubs {
     fun orderManagementService() = OrderManagementServiceStubBuilder()
     fun hermes() = HermesStubBuilder()
-
 }

@@ -37,7 +37,6 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
-
     @Test
     fun `should return orders for a given clientId`() {
         // given
@@ -62,7 +61,7 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     fun `when receive response with 4xx status code then throw exception`(
         exceptionClass: Class<Exception>,
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ) {
         // given
         val clientId = anyClientId()
@@ -83,7 +82,7 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     @MethodSource("serverErrors")
     fun `when receive response with 5xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ) {
         // given
         val clientId = anyClientId()
@@ -97,7 +96,6 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
         exception.message shouldContain clientId.clientId.toString()
         exception.message shouldContain properties.clientName
     }
-
 
     @ParameterizedTest(name = "{index}) response body: {0}")
     @MethodSource("incorrectResponseBody")
@@ -114,7 +112,6 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
         exception.message shouldContain clientId.clientId.toString()
         exception.message shouldContain properties.clientName
     }
-
 
     @Test
     fun `when service returns above timeout threshold then throw exception`() {
@@ -138,7 +135,7 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     @MethodSource("redirectErrors")
     fun `when receive response with 3xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ) {
         // given
         val clientId = anyClientId()

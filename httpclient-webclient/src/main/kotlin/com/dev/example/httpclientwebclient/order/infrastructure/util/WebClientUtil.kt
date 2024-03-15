@@ -30,7 +30,8 @@ private fun httpClient(properties: ConnectionProperties): ReactorClientHttpConne
             .doOnConnected {
                 it.addHandlerLast(ReadTimeoutHandler(properties.readTimeout, TimeUnit.MILLISECONDS))
                 it.addHandlerLast(WriteTimeoutHandler(3000, TimeUnit.MILLISECONDS))
-            })
+            }
+    )
 }
 
 private fun logRequestInfo(clientName: String) = ExchangeFilterFunction.ofRequestProcessor { request ->
@@ -45,11 +46,9 @@ private fun logResponseInfo(clientName: String) = ExchangeFilterFunction.ofRespo
     Mono.just(response)
 }
 
-
 interface ConnectionProperties {
     var clientName: String
     var baseUrl: String
     var connectionTimeout: Int
     var readTimeout: Long
 }
-

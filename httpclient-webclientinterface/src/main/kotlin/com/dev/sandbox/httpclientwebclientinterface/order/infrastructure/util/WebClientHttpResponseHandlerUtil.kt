@@ -9,10 +9,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 private val logger = KotlinLogging.logger {}
 
-
 suspend fun <T> handleHttpResponseAsEntity(
     request: suspend () -> T,
-    failureMessage: String,
+    failureMessage: String
 ): T {
     return try {
         val responseBody = request.invoke()
@@ -27,7 +26,7 @@ suspend fun <T> handleHttpResponseAsEntity(
 
 suspend fun <T> handleHttpResponseAsList(
     request: suspend () -> List<T>,
-    failureMessage: String,
+    failureMessage: String
 ): List<T> {
     return try {
         request.invoke().verifyNonNullableResponse()
@@ -41,9 +40,9 @@ suspend fun <T> handleHttpResponseAsList(
 
 suspend fun handleHttpResponse(
     request: suspend () -> Unit,
-    failureMessage: String,
+    failureMessage: String
 ) {
-     try {
+    try {
         request.invoke().verifyNonNullableResponse()
     } catch (exception: Exception) {
         throw customException(
@@ -55,7 +54,7 @@ suspend fun handleHttpResponse(
 
 private fun customException(
     exception: Exception,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceException {
     when (exception) {
         is WebClientResponseException -> {
@@ -84,7 +83,7 @@ private fun customException(
 
 private fun handle3xxRedirection(
     exception: WebClientResponseException,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceRedirectionException {
     val responseBody = exception.responseBodyAsString
     logger.error {
@@ -102,7 +101,7 @@ inline fun <reified T> T.verifyNonNullableResponse(): T {
 
 private fun handle5xxServerError(
     exception: WebClientResponseException,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceServerException {
     val responseBody = exception.responseBodyAsString
     logger.warn { "$failureMessage .Service responded with a server error= ${exception.statusCode} .Response body= $responseBody" }
@@ -111,7 +110,7 @@ private fun handle5xxServerError(
 
 private fun handle4xxClientError(
     exception: WebClientResponseException,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceException {
     val responseBody = exception.responseBodyAsString
     return if (exception.statusCode.value() == 404) {
@@ -128,7 +127,7 @@ private fun handle4xxClientError(
 
 private fun handleWebClientRequestException(
     clientRequestException: WebClientRequestException,
-    failureMessage: String,
+    failureMessage: String
 ) = when (clientRequestException.rootCause) {
     is ReadTimeoutException -> {
         logger.warn(clientRequestException) { "$failureMessage. Service failed to deliver response due to read timeout" }
@@ -143,7 +142,7 @@ private fun handleWebClientRequestException(
 
 private fun handleIncorrectResponseBody(
     e: Exception,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceIncorrectResponseBodyException {
     logger.error(e) { "$failureMessage. Service response cannot be deserialized into response object - possibly missing mandatory field or response has incorrect format" }
     return ExternalServiceIncorrectResponseBodyException(failureMessage)
@@ -151,7 +150,7 @@ private fun handleIncorrectResponseBody(
 
 private fun handleUnknownException(
     e: Exception,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceUnknownException {
     logger.error(e) { "$failureMessage. Service responded with unknown exception" }
     return ExternalServiceUnknownException(failureMessage)

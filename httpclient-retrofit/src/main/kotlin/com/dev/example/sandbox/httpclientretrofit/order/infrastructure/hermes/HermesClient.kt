@@ -8,7 +8,7 @@ private val logger = KotlinLogging.logger {}
 
 class HermesClient(
     private val hermesApi: HermesApi,
-    private val clientName: String,
+    private val clientName: String
 ) {
     suspend fun publish(event: InvoiceCreatedEventDto) {
         logger.info { "[$clientName] Publish InvoiceCreatedEvent $event" }

@@ -52,7 +52,7 @@ class HermesClientIntegrationTest : BaseIntegrationTest() {
     fun `when receive response with 4xx status code then throw exception`(
         exceptionClass: Class<Exception>,
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val invoiceCreatedEvent = HermesFixture.invoiceCreatedEvent()
@@ -73,7 +73,7 @@ class HermesClientIntegrationTest : BaseIntegrationTest() {
     @MethodSource("serverErrors")
     fun `when receive response with 5xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val invoiceCreatedEvent = HermesFixture.invoiceCreatedEvent()

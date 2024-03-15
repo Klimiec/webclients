@@ -24,7 +24,7 @@ class OrderManagementServiceConfiguration {
     fun orderCoreServiceAdapter(
         orderManagementServiceClient: OrderManagementServiceClient,
         orderCoreServiceCacheProperties: OrderCoreServiceCacheProperties,
-        meterRegistry: MeterRegistry,
+        meterRegistry: MeterRegistry
     ): GetOrderIds = OrderManagementServiceAdapter(orderManagementServiceClient).let { orderCoreServiceAdapter ->
         if (orderCoreServiceCacheProperties.enabled) {
             val cache = Caffeine.newBuilder()
@@ -42,7 +42,7 @@ class OrderManagementServiceConfiguration {
     fun orderCoreServiceClient(
         orderCoreServiceProperties: OrderCoreServiceConnectionProperties,
         objectMapper: ObjectMapper,
-        registry: MeterRegistry,
+        registry: MeterRegistry
     ): OrderManagementServiceClient = OrderManagementServiceClient(
         createExternalServiceApi(orderCoreServiceProperties, objectMapper, registry),
         orderCoreServiceProperties.clientName
@@ -54,7 +54,7 @@ data class OrderCoreServiceConnectionProperties(
     override var clientName: String,
     override var baseUrl: String,
     override var connectionTimeout: Long,
-    override var readTimeout: Long,
+    override var readTimeout: Long
 ) : ConnectionProperties
 
 @ConfigurationProperties(prefix = "services.order-management-service.cache")
@@ -62,5 +62,5 @@ data class OrderCoreServiceCacheProperties(
     override var name: String,
     override var enabled: Boolean,
     override var size: Long,
-    override var expireAfter: Duration,
+    override var expireAfter: Duration
 ) : CacheProperties

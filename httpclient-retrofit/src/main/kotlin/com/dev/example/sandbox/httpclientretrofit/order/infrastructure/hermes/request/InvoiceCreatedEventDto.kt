@@ -3,5 +3,5 @@ package com.dev.example.sandbox.httpclientretrofit.order.infrastructure.hermes.r
 data class InvoiceCreatedEventDto(
     val invoiceId: String,
     val orderId: String,
-    val timestamp: String,
+    val timestamp: String
 )

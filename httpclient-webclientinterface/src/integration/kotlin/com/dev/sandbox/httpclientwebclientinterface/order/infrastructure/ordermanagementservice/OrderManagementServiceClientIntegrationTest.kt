@@ -64,7 +64,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     fun `when receive response with 4xx status code then throw exception`(
         exceptionClass: Class<Exception>,
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
@@ -85,7 +85,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     @MethodSource("serverErrors")
     fun `when receive response with 5xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
@@ -222,4 +222,3 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
         }
     }
 }
-

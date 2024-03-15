@@ -12,10 +12,9 @@ import org.apache.hc.core5.http.ParseException
 const val DEFAULT_SERVER_RESPONSE = "No response body provided (default message)"
 private val logger = KotlinLogging.logger {}
 
-
 suspend inline fun <reified T> handleHttpResponseAsEntity(
     request: () -> T,
-    failureMessage: String,
+    failureMessage: String
 ): T {
     return try {
         val responseBody = request.invoke()
@@ -30,7 +29,7 @@ suspend inline fun <reified T> handleHttpResponseAsEntity(
 
 suspend inline fun <reified T> handleHttpResponseAsList(
     request: () -> List<T>,
-    failureMessage: String,
+    failureMessage: String
 ): List<T> {
     return try {
         request.invoke()
@@ -44,7 +43,7 @@ suspend inline fun <reified T> handleHttpResponseAsList(
 
 suspend inline fun handleHttpResponse(
     request: () -> Unit,
-    failureMessage: String,
+    failureMessage: String
 ) {
     try {
         request.invoke()
@@ -58,9 +57,8 @@ suspend inline fun handleHttpResponse(
 
 suspend fun customException(
     exception: Exception,
-    failureMessage: String,
+    failureMessage: String
 ): Throwable {
-
     when (exception) {
         is ClientRequestException -> {
             val responseBody = exception.response.bodyAsText().ifEmpty { DEFAULT_SERVER_RESPONSE }
@@ -85,8 +83,8 @@ suspend fun customException(
         is ServerResponseException -> {
             val responseBody = exception.response.bodyAsText().ifEmpty { DEFAULT_SERVER_RESPONSE }
             logger.warn {
-                "$failureMessage .Service responded with a server error= ${exception.response.status}." +
-                        "Response body= $responseBody"
+                "$failureMessage .Service responded with a server " +
+                    "error= ${exception.response.status}.Response body= $responseBody"
             }
             throw ExternalServiceServerException(failureMessage)
         }
@@ -95,7 +93,7 @@ suspend fun customException(
             val responseBody = exception.response.bodyAsText().ifEmpty { DEFAULT_SERVER_RESPONSE }
             logger.error {
                 "$failureMessage. Service responded with a redirection status code= ${exception.response.status}. " +
-                        "Response body= $responseBody"
+                    "Response body= $responseBody"
             }
             throw ExternalServiceRedirectionException(failureMessage)
         }
@@ -118,7 +116,6 @@ suspend fun customException(
         else -> throw ExternalServiceNetworkException(failureMessage)
     }
 }
-
 
 sealed class ExternalServiceException(message: String) : Exception(message)
 

@@ -9,14 +9,13 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 
-class OrderManagementServiceStubBuilder(
-) {
+class OrderManagementServiceStubBuilder {
     private var objectMapper: ObjectMapper = ObjectMapper()
     private var responseTime: Int = 0
 
     fun willReturnOrdersFor(
         clientId: ClientId,
-        response: List<Order>,
+        response: List<Order>
     ) {
         WireMock.stubFor(
             getOrdersFor(clientId).willReturn(
@@ -31,13 +30,13 @@ class OrderManagementServiceStubBuilder(
 
     fun willReturnOrdersFor(
         clientId: ClientId,
-        response: String,
+        response: String
     ) = willReturnResponseFor(clientId, 200, response)
 
     fun willReturnResponseFor(
         clientId: ClientId,
         status: Int,
-        body: String?,
+        body: String?
     ) {
         WireMock.stubFor(
             getOrdersFor(clientId).willReturn(

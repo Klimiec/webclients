@@ -16,7 +16,7 @@ interface HermesApi {
     @POST(URL)
     suspend fun publish(
         @Body body: InvoiceCreatedEventDto,
-        @Path("topic") topic: String = TOPIC_INVOICE_CREATED_EVENT,
+        @Path("topic") topic: String = TOPIC_INVOICE_CREATED_EVENT
     ): NetworkResponse<Unit, String>
 
     companion object {

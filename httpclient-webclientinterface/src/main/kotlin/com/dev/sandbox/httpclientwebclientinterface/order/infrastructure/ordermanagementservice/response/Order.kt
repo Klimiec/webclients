@@ -5,10 +5,10 @@ data class Order(
     val categoryId: String,
     val countryCode: String,
     val clientId: String,
-    val price: Price,
+    val price: Price
 ) {
     data class Price(
         val amount: String,
-        val currency: String,
+        val currency: String
     )
 }

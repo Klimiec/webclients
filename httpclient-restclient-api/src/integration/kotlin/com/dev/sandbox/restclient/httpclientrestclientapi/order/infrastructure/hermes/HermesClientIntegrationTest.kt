@@ -52,7 +52,7 @@ class HermesClientIntegrationTest : BaseIntegrationTest() {
     fun `when receive response with 4xx status code then throw exception`(
         exceptionClass: Class<Exception>,
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ) {
         // given
         val invoiceCreatedEvent = HermesFixture.invoiceCreatedEvent()
@@ -69,12 +69,11 @@ class HermesClientIntegrationTest : BaseIntegrationTest() {
         exception.message shouldContain properties.clientName
     }
 
-
     @ParameterizedTest(name = "{index}) http status code: {0}")
     @MethodSource("serverErrors")
     fun `when receive response with 5xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ) {
         // given
         val invoiceCreatedEvent = HermesFixture.invoiceCreatedEvent()
@@ -88,7 +87,6 @@ class HermesClientIntegrationTest : BaseIntegrationTest() {
         exception.message shouldContain invoiceCreatedEvent.toString()
         exception.message shouldContain properties.clientName
     }
-
 
     @Test
     fun `when service returns above timeout threshold then throw exception`() {

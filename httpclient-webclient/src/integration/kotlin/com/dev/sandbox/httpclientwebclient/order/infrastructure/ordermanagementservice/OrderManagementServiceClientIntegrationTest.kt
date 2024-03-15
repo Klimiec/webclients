@@ -41,7 +41,6 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
-
     @Test
     fun `should return orders for a given clientId`(): Unit = runBlocking {
         // given
@@ -66,7 +65,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     fun `when receive response with 4xx status code then throw exception`(
         exceptionClass: Class<Exception>,
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
@@ -83,12 +82,11 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
         exception.message shouldContain properties.clientName
     }
 
-
     @ParameterizedTest(name = "{index}) http status code: {0}")
     @MethodSource("serverErrors")
     fun `when receive response with 5xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
@@ -102,7 +100,6 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
         exception.message shouldContain clientId.clientId.toString()
         exception.message shouldContain properties.clientName
     }
-
 
     @Test
     fun `when service returns above timeout threshold then throw exception`(): Unit = runBlocking {
@@ -121,7 +118,6 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
         exception.message shouldContain clientId.clientId.toString()
         exception.message shouldContain properties.clientName
     }
-
 
     @ParameterizedTest(name = "{index}) response body: {0}")
     @MethodSource("incorrectResponseBody")
@@ -143,7 +139,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     @MethodSource("redirectErrors")
     fun `when receive response with 3xx status code then throw exception`(
         statusCode: Int,
-        responseBody: String?,
+        responseBody: String?
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()

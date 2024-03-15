@@ -18,7 +18,7 @@ private val logger = KotlinLogging.logger {}
 suspend fun <T> handleHttpResponse(
     request: WebClient.RequestHeadersSpec<*>,
     failureMessage: String,
-    monoType: ParameterizedTypeReference<List<T>>,
+    monoType: ParameterizedTypeReference<List<T>>
 ): List<T> {
     try {
         return request
@@ -44,10 +44,9 @@ suspend fun <T> handleHttpResponse(
 }
 
 suspend fun <T> handleHttpResponse(
-    // TODO: Rename?
     request: WebClient.RequestHeadersSpec<*>,
     failureMessage: String,
-    monoType: Class<T>,
+    monoType: Class<T>
 ): T {
     try {
         return request
@@ -74,7 +73,7 @@ suspend fun <T> handleHttpResponse(
 
 suspend fun handleHttpResponse(
     request: WebClient.RequestHeadersSpec<*>,
-    failureMessage: String,
+    failureMessage: String
 ) = try {
     request
         .retrieve()
@@ -99,7 +98,7 @@ suspend fun handleHttpResponse(
 
 private fun handle4xxClientError(
     response: ClientResponse,
-    failureMessage: String,
+    failureMessage: String
 ) = response.bodyToMono(String::class.java)
     .defaultIfEmpty(DEFAULT_SERVER_RESPONSE)
     .map { responseBody ->
@@ -115,38 +114,35 @@ private fun handle4xxClientError(
         }
     }
 
-
 private fun handle5xxServerError(
     response: ClientResponse,
-    failureMessage: String,
+    failureMessage: String
 ) = response.bodyToMono(String::class.java)
     .defaultIfEmpty(DEFAULT_SERVER_RESPONSE)
     .map { responseBody ->
         logger.warn {
-            "$failureMessage .Service responded with a server error= ${
-                response.statusCode().value()
-            } .Response body= $responseBody"
+            "$failureMessage .Service responded with a server error= ${response.statusCode().value()}" +
+                ".Response body= $responseBody"
         }
         ExternalServiceServerException(failureMessage)
     }
 
 private fun handle3xxRedirection(
     response: ClientResponse,
-    failureMessage: String,
+    failureMessage: String
 ) = response.bodyToMono(String::class.java)
     .defaultIfEmpty(DEFAULT_SERVER_RESPONSE)
     .map { responseBody ->
         logger.error {
-            "$failureMessage. Service responded with a redirection status code= ${
-                response.statusCode().value()
-            }. Response body= $responseBody"
+            "$failureMessage. Service responded with a redirection status code= " +
+                "${response.statusCode().value()}. Response body= $responseBody"
         }
         ExternalServiceRedirectionException(failureMessage)
     }
 
 private fun handleWebClientRequestException(
     clientRequestException: WebClientRequestException,
-    failureMessage: String,
+    failureMessage: String
 ) = when (clientRequestException.rootCause) {
     is ReadTimeoutException -> {
         logger.warn(clientRequestException) { "$failureMessage. Service failed to deliver response due to read timeout. ${clientRequestException.message}" }
@@ -161,7 +157,7 @@ private fun handleWebClientRequestException(
 
 private fun handleWebClientResponseException(
     clientResponseException: WebClientResponseException,
-    failureMessage: String,
+    failureMessage: String
 ): Throwable {
     logger.warn(clientResponseException) { "$failureMessage. Service response cannot be processed status code= ${clientResponseException.statusCode}" }
     throw ExternalServiceResponseException(failureMessage)
@@ -169,7 +165,7 @@ private fun handleWebClientResponseException(
 
 private fun handleDecodingException(
     e: DecodingException,
-    failureMessage: String,
+    failureMessage: String
 ): ExternalServiceIncorrectResponseBodyException {
     logger.error(e) { "$failureMessage. Service response cannot be deserialized into response object - possibly missing mandatory field or response has incorrect format" }
     throw ExternalServiceIncorrectResponseBodyException(failureMessage)

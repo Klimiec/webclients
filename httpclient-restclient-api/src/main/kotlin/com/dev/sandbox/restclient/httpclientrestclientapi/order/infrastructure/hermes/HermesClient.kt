@@ -10,7 +10,7 @@ private val logger = KotlinLogging.logger {}
 
 class HermesClient(
     private val restClient: RestClient,
-    private val clientName: String,
+    private val clientName: String
 ) {
     fun publish(event: InvoiceCreatedEventDto) {
         logger.info { "[$clientName] Publish InvoiceCreatedEvent $event" }
@@ -19,7 +19,7 @@ class HermesClient(
                 .uri("/topics/topic-invoice-created")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(event),
-            failureMessage = "[$clientName] Failed to publish InvoiceCreatedEvent $event",
+            failureMessage = "[$clientName] Failed to publish InvoiceCreatedEvent $event"
         ).also {
             logger.info { "[$clientName] Successfully published InvoiceCreatedEvent" }
         }

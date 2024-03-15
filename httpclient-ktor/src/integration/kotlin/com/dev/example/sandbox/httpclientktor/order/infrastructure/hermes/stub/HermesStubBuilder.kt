@@ -8,8 +8,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 
-class HermesStubBuilder(
-) {
+class HermesStubBuilder {
     private var responseTime: Int = 0
 
     fun willAcceptInvoiceCreatedEvent() {
@@ -28,7 +27,7 @@ class HermesStubBuilder(
 
     fun willRejectAcceptInvoiceCreatedEventWith(
         status: Int,
-        body: String?,
+        body: String?
     ): StubMapping = WireMock.stubFor(
         invoiceCreatedEventTopic().willReturn(
             WireMock.aResponse()
@@ -38,13 +37,13 @@ class HermesStubBuilder(
         )
     )
 
-
     fun withDelay(responseTime: Int) = apply {
         this.responseTime = responseTime
     }
 
     fun verifyInvoiceCreatedEventPublished(event: InvoiceCreatedEventDto) {
-        WireMock.verify(1,
+        WireMock.verify(
+            1,
             WireMock.postRequestedFor(WireMock.urlPathEqualTo("/topics/topic-invoice-created"))
                 .withRequestBody(WireMock.matchingJsonPath("$.invoiceId", WireMock.equalTo(event.invoiceId)))
                 .withRequestBody(WireMock.matchingJsonPath("$.orderId", WireMock.equalTo(event.orderId)))
