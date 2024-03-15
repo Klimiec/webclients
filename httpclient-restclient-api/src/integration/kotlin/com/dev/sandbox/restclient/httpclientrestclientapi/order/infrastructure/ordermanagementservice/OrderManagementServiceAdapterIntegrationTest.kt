@@ -1,10 +1,10 @@
 package com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice
 
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.dev.sandbox.restclient.httpclientrestclientapi.BaseIntegrationTest
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.GetOrderIds
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.OrderId
-import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe

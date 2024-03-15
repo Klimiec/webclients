@@ -4,8 +4,8 @@ import com.dev.sandbox.httpclientwebclientinterface.BaseIntegrationTest
 import com.dev.sandbox.httpclientwebclientinterface.order.domain.ClientId
 import com.dev.sandbox.httpclientwebclientinterface.order.domain.GetOrderIds
 import com.dev.sandbox.httpclientwebclientinterface.order.domain.OrderId
-import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import io.kotest.matchers.comparables.shouldBeGreaterThan

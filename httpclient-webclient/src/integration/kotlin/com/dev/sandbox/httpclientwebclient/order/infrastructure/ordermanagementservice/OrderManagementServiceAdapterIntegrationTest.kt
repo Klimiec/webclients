@@ -3,8 +3,8 @@ package com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagement
 import com.dev.example.httpclientwebclient.order.domain.GetOrderIds
 import com.dev.example.httpclientwebclient.order.domain.OrderId
 import com.dev.sandbox.httpclientwebclient.BaseIntegrationTest
-import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe

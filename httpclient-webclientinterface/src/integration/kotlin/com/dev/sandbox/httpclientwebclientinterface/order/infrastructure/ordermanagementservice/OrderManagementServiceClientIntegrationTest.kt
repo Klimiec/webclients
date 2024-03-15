@@ -1,8 +1,9 @@
 package com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice
 
 import com.dev.sandbox.httpclientwebclientinterface.BaseIntegrationTest
-import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.internal.OrderManagementServiceContractFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.ordermanagementservice.stub.internal.OrderManagementServiceStubBuilder
 import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.util.ExternalServiceClientException
 import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.util.ExternalServiceIncorrectResponseBodyException
 import com.dev.sandbox.httpclientwebclientinterface.order.infrastructure.util.ExternalServiceNetworkException
@@ -40,11 +41,13 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
+    private val orderManagementServiceStub = OrderManagementServiceStubBuilder()
+
     @Test
     fun `should return orders for a given clientId`(): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
+        orderManagementServiceStub.willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
 
         // when
         val response = orderManagementServiceClient.getOrdersFor(clientId)
@@ -68,7 +71,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnResponseFor(clientId, status = statusCode, body = responseBody)
+        orderManagementServiceStub.willReturnOrdersFor(clientId, status = statusCode, response = responseBody)
 
         // when
         val exception = shouldThrowAny {
@@ -89,7 +92,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     ): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnResponseFor(clientId, status = statusCode, body = responseBody)
+        orderManagementServiceStub.willReturnOrdersFor(clientId, status = statusCode, response = responseBody)
 
         // when
         val exception = shouldThrow<ExternalServiceServerException> {
@@ -105,11 +108,11 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
         // given
         val clientId = anyClientId()
 
-        stubs.orderManagementService()
+        orderManagementServiceStub
             .withDelay(properties.readTimeout.toInt())
             .willReturnOrdersFor(
                 clientId,
-                response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
+                response = ordersPlacedByPolishCustomer()
             )
 
         // when
@@ -126,8 +129,8 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     fun `when receive response with incorrect body then throw exception`(responseBody: String?): Unit = runBlocking {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService()
-            .willReturnResponseFor(clientId, status = HttpStatus.OK.value(), body = responseBody)
+        orderManagementServiceStub
+            .willReturnOrdersFor(clientId, status = HttpStatus.OK.value(), response = responseBody)
 
         // when
         val exception = shouldThrow<ExternalServiceIncorrectResponseBodyException> {
@@ -142,7 +145,7 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
     fun `when service closes connection then throw exception`(): Unit = runBlocking {
         // given: "close connection before delivering full response"
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnWithFault(clientId, fault = Fault.RANDOM_DATA_THEN_CLOSE)
+        orderManagementServiceStub.willReturnWithFault(clientId, fault = Fault.RANDOM_DATA_THEN_CLOSE)
 
         // when
         val exception = shouldThrow<ExternalServiceNetworkException> {
@@ -159,9 +162,9 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
         meterRegistry.clear()
         // and
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnOrdersFor(
+        orderManagementServiceStub.willReturnOrdersFor(
             clientId,
-            response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
+            response = ordersPlacedByPolishCustomer()
         )
 
         // when
@@ -198,14 +201,6 @@ class OrderManagementServiceClientIntegrationTest : BaseIntegrationTest() {
                     """{"message": "Server encountered an internal error"}"""
                 ),
                 Arguments.of(HttpStatus.SERVICE_UNAVAILABLE.value(), null)
-            )
-        }
-
-        @JvmStatic
-        fun redirectErrors(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(HttpStatus.MOVED_PERMANENTLY.value(), """{"message": "MOVED_PERMANENTLY"}"""),
-                Arguments.of(HttpStatus.FOUND.value(), """{"message": "FOUND"}""")
             )
         }
 

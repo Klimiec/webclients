@@ -1,7 +1,8 @@
 package com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice
 
-import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.internal.OrderManagementServiceContractFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.internal.OrderManagementServiceStubBuilder
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.util.ExternalServiceClientException
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.util.ExternalServiceIncorrectResponseBodyException
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.util.ExternalServiceReadTimeoutException
@@ -27,7 +28,8 @@ import org.springframework.http.HttpStatus
 import java.util.stream.Stream
 
 @WireMockTest(httpPort = 8082)
-class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.httpclientrestclientapi.BaseIntegrationTest() {
+class OrderManagementServiceClientIntegrationTest :
+    com.dev.sandbox.restclient.httpclientrestclientapi.BaseIntegrationTest() {
     @Autowired
     lateinit var orderManagementServiceClient: OrderManagementServiceClient
 
@@ -37,11 +39,13 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
+    private var orderManagementServiceStub = OrderManagementServiceStubBuilder()
+
     @Test
     fun `should return orders for a given clientId`() {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
+        orderManagementServiceStub.willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
 
         // when
         val response = orderManagementServiceClient.getOrdersFor(clientId)
@@ -65,7 +69,7 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     ) {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnResponseFor(clientId, status = statusCode, body = responseBody)
+        orderManagementServiceStub.willReturnOrdersFor(clientId, status = statusCode, response = responseBody)
 
         // when
         val exception = shouldThrowAny {
@@ -86,7 +90,7 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     ) {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnResponseFor(clientId, status = statusCode, body = responseBody)
+        orderManagementServiceStub.willReturnOrdersFor(clientId, status = statusCode, response = responseBody)
 
         // when
         val exception = shouldThrow<ExternalServiceServerException> {
@@ -102,7 +106,11 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     fun `when receive response with incorrect body then throw exception`(responseBody: String?) {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnResponseFor(clientId, status = HttpStatus.OK.value(), body = responseBody)
+        orderManagementServiceStub.willReturnOrdersFor(
+            clientId,
+            status = HttpStatus.OK.value(),
+            response = responseBody
+        )
 
         // when
         val exception = shouldThrow<ExternalServiceIncorrectResponseBodyException> {
@@ -118,9 +126,9 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
         // given
         val clientId = anyClientId()
 
-        stubs.orderManagementService()
+        orderManagementServiceStub
             .withDelay(properties.readTimeout.toInt())
-            .willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer(clientId = clientId.toString()))
+            .willReturnOrdersFor(clientId, response = ordersPlacedByPolishCustomer())
 
         // when
         val exception = shouldThrow<ExternalServiceReadTimeoutException> {
@@ -139,7 +147,7 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
     ) {
         // given
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnResponseFor(clientId, status = statusCode, body = responseBody)
+        orderManagementServiceStub.willReturnOrdersFor(clientId, status = statusCode, response = responseBody)
 
         // when
         val exception = shouldThrow<ExternalServiceRedirectionException> {
@@ -156,9 +164,9 @@ class OrderManagementServiceClientIntegrationTest : com.dev.sandbox.restclient.h
         meterRegistry.clear()
         // and
         val clientId = anyClientId()
-        stubs.orderManagementService().willReturnOrdersFor(
-            clientId,
-            response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
+        orderManagementServiceStub.willReturnOrdersFor(
+            clientId = clientId,
+            response = ordersPlacedByPolishCustomer()
         )
 
         // when

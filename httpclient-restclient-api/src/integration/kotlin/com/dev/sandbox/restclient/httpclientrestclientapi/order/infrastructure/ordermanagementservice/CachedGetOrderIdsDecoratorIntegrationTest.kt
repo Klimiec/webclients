@@ -1,11 +1,11 @@
 package com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice
 
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.dev.sandbox.restclient.httpclientrestclientapi.BaseIntegrationTest
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.ClientId
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.GetOrderIds
 import com.dev.sandbox.restclient.httpclientrestclientapi.order.domain.OrderId
-import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.restclient.httpclientrestclientapi.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -44,7 +44,7 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
         // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
-            clientId,
+            clientId = clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
 
@@ -66,7 +66,7 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
         // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
-            clientId,
+            clientId = clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientId)
@@ -90,7 +90,7 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
         // given
         val clientIdA = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
-            clientIdA,
+            clientId = clientIdA,
             response = ordersPlacedByPolishCustomer(clientId = clientIdA.toString())
         )
         cachedOrderManagementServiceAdapter.getOrderIdsFor(clientIdA)
@@ -110,7 +110,7 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
         // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
-            clientId,
+            clientId = clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
 

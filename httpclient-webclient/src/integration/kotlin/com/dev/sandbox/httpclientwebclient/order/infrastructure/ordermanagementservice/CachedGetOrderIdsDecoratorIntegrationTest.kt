@@ -6,8 +6,8 @@ import com.dev.example.httpclientwebclient.order.domain.OrderId
 import com.dev.example.httpclientwebclient.order.infrastructure.ordermanagementservice.CachedGetOrderIdsDecoratorIntegrationTest
 import com.dev.example.httpclientwebclient.order.infrastructure.ordermanagementservice.OrderManagementServiceCacheProperties
 import com.dev.sandbox.httpclientwebclient.BaseIntegrationTest
-import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.anyClientId
-import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
+import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.sandbox.httpclientwebclient.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import io.kotest.matchers.comparables.shouldBeGreaterThan

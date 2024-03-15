@@ -42,7 +42,7 @@ class HermesStubBuilder {
     }
 
     fun verifyInvoiceCreatedEventPublished(event: InvoiceCreatedEventDto) {
-        WireMock.verify(
+        WireMock.verify(1,
             WireMock.postRequestedFor(WireMock.urlPathEqualTo("/topics/topic-invoice-created"))
                 .withRequestBody(WireMock.matchingJsonPath("$.invoiceId", WireMock.equalTo(event.invoiceId)))
                 .withRequestBody(WireMock.matchingJsonPath("$.orderId", WireMock.equalTo(event.orderId)))

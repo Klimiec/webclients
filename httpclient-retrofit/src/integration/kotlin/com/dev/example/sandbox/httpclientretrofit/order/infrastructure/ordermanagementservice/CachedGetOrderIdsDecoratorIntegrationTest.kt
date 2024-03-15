@@ -4,8 +4,8 @@ import com.dev.example.sandbox.httpclientretrofit.BaseIntegrationTest
 import com.dev.example.sandbox.httpclientretrofit.order.domain.ClientId
 import com.dev.example.sandbox.httpclientretrofit.order.domain.GetOrderIds
 import com.dev.example.sandbox.httpclientretrofit.order.domain.OrderId
-import com.dev.example.sandbox.httpclientretrofit.order.infrastructure.ordermanagementservice.stub.OrderCoreServiceFixture.anyClientId
-import com.dev.example.sandbox.httpclientretrofit.order.infrastructure.ordermanagementservice.stub.OrderCoreServiceFixture.ordersPlacedByPolishCustomer
+import com.dev.example.sandbox.httpclientretrofit.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.anyClientId
+import com.dev.example.sandbox.httpclientretrofit.order.infrastructure.ordermanagementservice.stub.external.OrderManagementServiceFixture.ordersPlacedByPolishCustomer
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -44,7 +44,7 @@ internal class CachedGetOrderIdsDecoratorIntegrationTest : BaseIntegrationTest()
         // given
         val clientId = anyClientId()
         stubs.orderManagementService().willReturnOrdersFor(
-            clientId,
+            clientId = clientId,
             response = ordersPlacedByPolishCustomer(clientId = clientId.toString())
         )
 
